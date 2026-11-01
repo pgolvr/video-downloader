@@ -22,7 +22,11 @@ log = logging.getLogger("downloader")
 BASE_DIR = Path(__file__).resolve().parent
 DOWNLOAD_DIR = BASE_DIR / "downloads"
 DOWNLOAD_DIR.mkdir(exist_ok=True)
-FFMPEG_DIR = str(BASE_DIR)
+import platform
+if platform.system() == "Windows":
+    FFMPEG_DIR = str(BASE_DIR)
+else:
+    FFMPEG_DIR = "/usr/bin"
 
 app = FastAPI(title="API de Download de Vídeos", version="1.1.0")
 app.add_middleware(
