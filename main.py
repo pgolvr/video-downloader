@@ -29,7 +29,7 @@ if platform.system() == "Windows":
 else:
     FFMPEG_DIR = "/usr/bin"
 
-app = FastAPI(title="API de Download de Vídeos", version="1.1.0")
+app = FastAPI(title="API de Download de Vídeos", version="1.2.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -80,13 +80,14 @@ class YDLLogger:
     def warning(self, msg): log.warning("yt-dlp: %s", msg)
     def error(self, msg): log.error("yt-dlp: %s", msg)
 
-# ---------- Opções para evitar bloqueios do YouTube ----------
+# ---------- Opções para evitar bloqueios do YouTube (Estratégia Smart TV) ----------
 COMMON_YDL_OPTS = {
-    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     "referer": "https://www.youtube.com/",
     "extractor_args": {
         "youtube": {
-            "player_client": ["android", "web_embedded", "web"]
+            # O client 'tv' (YouTube TV) é o mais resistente a bloqueios de bot em servidores
+            "player_client": ["tv", "web"] 
         }
     },
     "nocheckcertificate": True,
