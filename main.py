@@ -22,6 +22,7 @@ log = logging.getLogger("downloader")
 BASE_DIR = Path(__file__).resolve().parent
 DOWNLOAD_DIR = BASE_DIR / "downloads"
 DOWNLOAD_DIR.mkdir(exist_ok=True)
+
 import platform
 if platform.system() == "Windows":
     FFMPEG_DIR = str(BASE_DIR)
@@ -69,7 +70,7 @@ def safe_unlink(path: Path):
         log.warning("Não consegui remover %s: %s", path, e)
 
 def cleanup_job(job_prefix: str):
-    """Remove SÓ os arquivos deste download (inclui .part, .f137.mp4 etc.)."""
+    """Remove SÓ os arquivos deste download (inclui .part, .mp3, etc.)."""
     for f in DOWNLOAD_DIR.glob(f"{job_prefix}*"):
         safe_unlink(f)
 
@@ -78,6 +79,12 @@ class YDLLogger:
     def info(self, msg): log.info("yt-dlp: %s", msg)
     def warning(self, msg): log.warning("yt-dlp: %s", msg)
     def error(self, msg): log.error("yt-dlp: %s", msg)
+
+# ---------- Opções para evitar bloqueios do YouTube ----------
+COMMON_YDL_OPTS = {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "referer": "https://www.youtube.com/",
+}
 
 # ---------- Rotas ----------
 @app.get("/")
@@ -92,7 +99,13 @@ def get_video_info(data: dict):
 
     log.info("INFO: %s", url)
     try:
-        with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True, "noplaylist": True}) as ydl:
+        ydl_opts = {
+            "quiet": True, 
+            "no_warnings": True, 
+            "noplaylist": True,
+            **COMMON_YDL_OPTS
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
     except Exception as e:
         log.exception("Erro em /api/info")
@@ -147,6 +160,7 @@ def download_video(data: dict):
         "logger": YDLLogger(),
         "quiet": False,
         "no_warnings": False,
+        **COMMON_YDL_OPTS
     }
 
     try:
@@ -189,6 +203,72 @@ def download_video(data: dict):
     return FileResponse(
         path=final_path,
         media_type=media_type,
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(download_name)}",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+        background=BackgroundTask(cleanup_job, job_id),
+    )
+
+@app.post("/api/download-audio")
+def download_audio(data: dict):
+    url = data.get("url")
+    if not url:
+        raise HTTPException(status_code=400, detail="URL não fornecida")
+
+    job_id = uuid.uuid4().hex
+    outtmpl = str(DOWNLOAD_DIR / f"{job_id}.%(ext)s")
+
+    log.info("DOWNLOAD AUDIO job=%s url=%s", job_id, url)
+
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "outtmpl": outtmpl,
+        "ffmpeg_location": FFMPEG_DIR,
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }],
+        "noplaylist": True,
+        "logger": YDLLogger(),
+        "quiet": False,
+        "no_warnings": False,
+        **COMMON_YDL_OPTS
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+    except Exception as e:
+        log.exception("Erro no yt-dlp durante o download de áudio")
+        cleanup_job(job_id)
+        raise HTTPException(status_code=500, detail=f"Falha no download de áudio: {e}")
+
+    # Procurar explicitamente pelo arquivo .mp3 gerado com este job_id
+    mp3_candidates = list(DOWNLOAD_DIR.glob(f"{job_id}.mp3"))
+    if mp3_candidates:
+        final_path = mp3_candidates[0]
+    else:
+        # Fallback: procurar qualquer arquivo do job
+        candidates = list(DOWNLOAD_DIR.glob(f"{job_id}.*"))
+        if candidates:
+            final_path = max(candidates, key=lambda f: f.stat().st_size)
+
+    if final_path is None or not final_path.exists():
+        log.error("Arquivo final de áudio não encontrado para o job %s", job_id)
+        cleanup_job(job_id)
+        raise HTTPException(status_code=500, detail="O download de áudio terminou mas o arquivo final não foi gerado.")
+
+    size_mb = final_path.stat().st_size / 1024 / 1024
+    log.info("✅ Arquivo de áudio final gerado: %s (%.1f MB)", final_path.name, size_mb)
+
+    title = sanitize_filename(info.get("title", "audio"))
+    download_name = f"{title}.mp3"
+    
+    return FileResponse(
+        path=final_path,
+        media_type="audio/mpeg",
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{quote(download_name)}",
             "Access-Control-Expose-Headers": "Content-Disposition",
