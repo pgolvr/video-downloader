@@ -1,0 +1,32 @@
+# Ignorar executáveis do FFmpeg (muito grandes para o GitHub)
+ffmpeg.exe
+ffprobe.exe
+ffplay.exe
+
+# Ignorar arquivos temporários de download
+downloads/
+temp_video.*
+*.part
+
+# Ignorar arquivos do Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Ignorar arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignorar arquivos do sistema
+.DS_Store
+Thumbs.db
+desktop.ini

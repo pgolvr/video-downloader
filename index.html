@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="pageTitle">Baixador de Vídeos</title>
+    <meta name="description" content="Baixe vídeos do YouTube, Instagram, Facebook, TikTok e mais de 1000 sites. Rápido, grátis e sem instalação.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col p-4">
+
+    <!-- Seletor de Idiomas no topo -->
+    <div class="w-full max-w-2xl mx-auto mt-4 flex justify-end">
+        <div class="relative">
+            <select id="languageSelect" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="pt">🇧🇷 Português</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="es">🇪🇸 Español</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="flex-1 flex flex-col items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-2xl">
+            <h1 class="text-3xl font-bold text-center text-indigo-600 mb-2">
+                <i class="fas fa-download mr-2"></i><span data-i18n="title">Baixador de Vídeos</span>
+            </h1>
+            <p class="text-gray-500 text-center mb-6" data-i18n="subtitle">Cole a URL do vídeo para começar</p>
+
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="videoUrl" data-i18n-placeholder="urlPlaceholder" placeholder="https://www.youtube.com/watch?v=..." 
+                    class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button id="btnSearch" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold cursor-pointer">
+                    <i class="fas fa-search mr-1"></i><span data-i18n="searchBtn">Buscar</span>
+                </button>
+            </div>
+
+            <div id="resultArea" style="display: none;">
+                <div class="flex flex-col md:flex-row gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
+                    <img id="thumbnail" src="" alt="Thumbnail" class="w-full md:w-48 rounded-lg object-cover shadow">
+                    <div class="flex-1">
+                        <h2 id="videoTitle" class="text-xl font-bold text-gray-800 mb-2"></h2>
+                        <p class="text-sm text-gray-500 mb-1"><span data-i18n="byLabel">Por:</span> <span id="videoUploader"></span></p>
+                        <p class="text-gray-600 mb-4"><span data-i18n="durationLabel">Duração:</span> <span id="videoDuration"></span></p>
+                        
+                        <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="qualityLabel">Qualidade disponível:</label>
+                        <select id="formatSelect" class="w-full p-2 border border-gray-300 rounded-lg mb-4"></select>
+
+                        <button id="btnDownload" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold cursor-pointer">
+                            <i class="fas fa-file-download mr-2"></i><span data-i18n="downloadBtn">Baixar Vídeo</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading" style="display: none;" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-4xl text-indigo-600"></i>
+                <p class="text-gray-600 mt-2" data-i18n="processingText">Processando vídeo...</p>
+            </div>
+
+            <div id="errorMessage" style="display: none;" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="mt-8 text-gray-500 text-sm text-center pb-4">
+        <p data-i18n="footerText">Apenas para fins educacionais. Respeite os direitos autorais.</p>
+    </footer>
+
+    <script>
+        // ========== SISTEMA DE TRADUÇÕES ==========
+        const translations = {
+            pt: {
+                pageTitle: "Baixador de Vídeos",
+                title: "Baixador de Vídeos",
+                subtitle: "Cole a URL do vídeo para começar",
+                urlPlaceholder: "https://www.youtube.com/watch?v=...",
+                searchBtn: "Buscar",
+                byLabel: "Por:",
+                durationLabel: "Duração:",
+                qualityLabel: "Qualidade disponível:",
+                downloadBtn: "Baixar Vídeo",
+                processingText: "Processando vídeo...",
+                downloadingText: "Baixando e processando... (aguarde)",
+                footerText: "Apenas para fins educacionais. Respeite os direitos autorais.",
+                alertInvalidUrl: "Por favor, insira uma URL válida.",
+                alertDownloadError: "Erro ao baixar: "
+            },
+            en: {
+                pageTitle: "Video Downloader",
+                title: "Video Downloader",
+                subtitle: "Paste the video URL to start",
+                urlPlaceholder: "https://www.youtube.com/watch?v=...",
+                searchBtn: "Search",
+                byLabel: "By:",
+                durationLabel: "Duration:",
+                qualityLabel: "Available quality:",
+                downloadBtn: "Download Video",
+                processingText: "Processing video...",
+                downloadingText: "Downloading and processing... (please wait)",
+                footerText: "For educational purposes only. Respect copyright laws.",
+                alertInvalidUrl: "Please enter a valid URL.",
+                alertDownloadError: "Download error: "
+            },
+            es: {
+                pageTitle: "Descargador de Videos",
+                title: "Descargador de Videos",
+                subtitle: "Pega la URL del video para comenzar",
+                urlPlaceholder: "https://www.youtube.com/watch?v=...",
+                searchBtn: "Buscar",
+                byLabel: "Por:",
+                durationLabel: "Duración:",
+                qualityLabel: "Calidad disponible:",
+                downloadBtn: "Descargar Video",
+                processingText: "Procesando video...",
+                downloadingText: "Descargando y procesando... (espere)",
+                footerText: "Solo para fines educativos. Respete los derechos de autor.",
+                alertInvalidUrl: "Por favor, ingrese una URL válida.",
+                alertDownloadError: "Error al descargar: "
+            }
+        };
+
+        let currentLang = 'pt';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            
+            // Atualiza textos normais
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+            
+            // Atualiza placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+            
+            // Atualiza o lang do HTML (bom para SEO)
+            document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang === 'es' ? 'es' : 'en';
+            
+            // Salva preferência
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Detecta idioma do navegador na primeira visita
+        function detectBrowserLanguage() {
+            const saved = localStorage.getItem('preferredLanguage');
+            if (saved && translations[saved]) return saved;
+            
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.startsWith('es')) return 'es';
+            if (browserLang.startsWith('en')) return 'en';
+            return 'pt';
+        }
+
+        // ========== LÓGICA DO APP ==========
+        const API_URL = "/api";
+
+        document.getElementById('languageSelect').addEventListener('change', function() {
+            setLanguage(this.value);
+        });
+
+        document.getElementById('btnSearch').addEventListener('click', function() {
+            const url = document.getElementById('videoUrl').value.trim();
+            if (!url) { 
+                alert(translations[currentLang].alertInvalidUrl); 
+                return; 
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultArea').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('btnSearch').disabled = true;
+            
+            fetch(API_URL + '/info', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('btnSearch').disabled = false;
+                if (data.detail) {
+                    document.getElementById('errorMessage').textContent = data.detail;
+                    document.getElementById('errorMessage').style.display = 'block';
+                    return;
+                }
+                document.getElementById('videoTitle').textContent = data.title;
+                document.getElementById('videoUploader').textContent = data.uploader;
+                document.getElementById('thumbnail').src = data.thumbnail;
+                const mins = Math.floor(data.duration / 60);
+                document.getElementById('videoDuration').textContent = mins + " min";
+                
+                const select = document.getElementById('formatSelect');
+                select.innerHTML = '';
+                data.formats.forEach(function(fmt) {
+                    const option = document.createElement('option');
+                    option.value = fmt.format_id;
+                    option.textContent = fmt.resolution + " - " + fmt.ext.toUpperCase();
+                    select.appendChild(option);
+                });
+                document.getElementById('resultArea').style.display = 'block';
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('btnSearch').disabled = false;
+                document.getElementById('errorMessage').textContent = error.message;
+                document.getElementById('errorMessage').style.display = 'block';
+            });
+        });
+
+        document.getElementById('btnDownload').addEventListener('click', function() {
+            const url = document.getElementById('videoUrl').value.trim();
+            const formatId = document.getElementById('formatSelect').value;
+            const btn = document.getElementById('btnDownload');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + translations[currentLang].downloadingText;
+
+            let filename = "video.mp4";
+
+            fetch(API_URL + '/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url, format_id: formatId })
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.json().then(function(data) { throw new Error(data.detail || "Falha ao baixar"); });
+                }
+                const cd = response.headers.get('Content-Disposition') || '';
+                const m = cd.match(/filename\*=UTF-8''([^;]+)/i);
+                if (m) filename = decodeURIComponent(m[1]);
+                return response.blob();
+            })
+            .then(function(blob) {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+            })
+            .catch(function(error) { 
+                alert(translations[currentLang].alertDownloadError + error.message); 
+            })
+            .finally(function() { 
+                btn.disabled = false; 
+                btn.innerHTML = '<i class="fas fa-file-download mr-2"></i>' + translations[currentLang].downloadBtn; 
+            });
+        });
+
+        // Inicializa com o idioma detectado
+        const initialLang = detectBrowserLanguage();
+        document.getElementById('languageSelect').value = initialLang;
+        setLanguage(initialLang);
+    </script>
+</body>
+</html>
