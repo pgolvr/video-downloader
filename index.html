@@ -1,310 +1,802 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="pageTitle">Baixador de Vídeos</title>
-    <meta name="description" content="Baixe vídeos do YouTube, Instagram, Facebook, TikTok e mais de 1000 sites. Rápido, grátis e sem instalação.">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="pageTitle">OmniDrop • Baixador de Vídeos Multiplataforma HD & 4K</title>
+  <meta name="description" content="Baixe vídeos do YouTube, Instagram, Facebook, TikTok e mais de 1000 sites. Rápido, grátis e sem instalação.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            darkBg: '#090a0f',
+            darkCard: '#11131f',
+          },
+          animation: {
+            'glow-pulse': 'glow 8s ease-in-out infinite alternate',
+            'float-slow': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            glow: {
+              '0%': { transform: 'scale(1) translate(0px, 0px)', opacity: '0.45' },
+              '100%': { transform: 'scale(1.15) translate(25px, -20px)', opacity: '0.75' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    .glass-panel {
+      background: rgba(17, 19, 31, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .light .glass-panel {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.07);
+    }
+    .mesh-gradient {
+      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.22) 0%, rgba(168, 85, 247, 0.12) 35%, transparent 70%);
+    }
+    .light .mesh-gradient {
+      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.14) 0%, rgba(236, 72, 153, 0.08) 35%, transparent 75%);
+    }
+    /* Custom scrollbar for select */
+    select option {
+      background-color: #11131f;
+      color: #f8fafc;
+    }
+    .light select option {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col p-4">
 
-    <!-- Seletor de Idiomas no topo -->
-    <div class="w-full max-w-2xl mx-auto mt-4 flex justify-end">
+<body class="bg-[#090a0f] text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300 selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+
+  <!-- Glows decorativos de fundo -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] sm:w-[900px] h-[450px] mesh-gradient pointer-events-none -z-10"></div>
+  <div class="absolute top-24 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+  <div class="absolute top-72 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+
+  <!-- Header / Barra de Navegação -->
+  <header class="w-full sticky top-0 z-40 border-b border-white/5 bg-[#090a0f]/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-300">
+          <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+        </div>
+        <div>
+          <span class="font-display font-bold text-xl sm:text-2xl tracking-tight text-white flex items-center gap-1.5">
+            Omni<span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">Drop</span>
+          </span>
+          <span class="text-[10px] uppercase font-semibold tracking-wider text-indigo-400 block -mt-1">Media Saver Pro</span>
+        </div>
+      </a>
+
+      <!-- Ações do Cabeçalho -->
+      <div class="flex items-center gap-3">
+        <!-- Idioma Dropdown -->
         <div class="relative">
-            <select id="languageSelect" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="pt">🇧🇷 Português</option>
-                <option value="en">🇺🇸 English</option>
-                <option value="es">🇪🇸 Español</option>
-            </select>
+          <select id="languageSelect" class="appearance-none bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 border border-white/10 rounded-xl px-3 py-2 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            <option value="pt">🇧🇷 PT-BR</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Español</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
         </div>
+
+        <!-- Botão Alternador de Tema -->
+        <button id="themeToggle" title="Alternar Modo Escuro/Claro" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition">
+          <i class="fa-regular fa-sun text-sm" id="themeIcon"></i>
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- Conteúdo Principal -->
-    <div class="flex-1 flex flex-col items-center justify-center">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-2xl">
-            <h1 class="text-3xl font-bold text-center text-indigo-600 mb-2">
-                <i class="fas fa-download mr-2"></i><span data-i18n="title">Baixador de Vídeos</span>
-            </h1>
-            <p class="text-gray-500 text-center mb-6" data-i18n="subtitle">Cole a URL do vídeo para começar</p>
+  <!-- Conteúdo Principal -->
+  <main class="flex-1">
+    
+    <!-- Hero & Área de Input -->
+    <section id="ferramenta" class="pt-12 pb-20 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
+      
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-pink-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold mb-6">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span data-i18n="badgeText">Sem limites, 100% gratuito e sem marcas d'água</span>
+      </div>
 
-            <div class="flex gap-2 mb-4">
-                <input type="text" id="videoUrl" data-i18n-placeholder="urlPlaceholder" placeholder="https://www.youtube.com/watch?v=..." 
-                    class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <button id="btnSearch" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold cursor-pointer">
-                    <i class="fas fa-search mr-1"></i><span data-i18n="searchBtn">Buscar</span>
+      <h1 class="font-display text-4xl sm:text-6xl font-bold tracking-tight text-white mb-4 leading-tight max-w-4xl">
+        <span data-i18n="heroTitle1">Baixe vídeos e áudios com</span>
+        <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400" data-i18n="heroTitle2">qualidade máxima instantânea</span>
+      </h1>
+
+      <p class="text-slate-400 text-sm sm:text-lg max-w-2xl mb-8" data-i18n="heroSubtitle">
+        Cole o link de qualquer vídeo do YouTube, TikTok, Instagram Reels, Pinterest ou Facebook para baixar em MP4 Full HD / 4K ou MP3 de alta fidelidade.
+      </p>
+
+      <!-- CARD DA BARRA DE PESQUISA -->
+      <div class="w-full max-w-3xl glass-panel p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl shadow-2xl shadow-indigo-950/40 border border-white/10 relative transition-all duration-300 hover:border-indigo-500/40">
+        
+        <form id="downloadForm" onsubmit="handleAnalyze(event)" class="flex flex-col sm:flex-row items-center gap-2 w-full">
+          
+          <div class="relative w-full flex items-center">
+            <span id="detectedPlatformIcon" class="absolute left-4 text-indigo-400 text-lg transition-transform duration-300">
+              <i class="fa-solid fa-link"></i>
+            </span>
+            <input 
+              type="url" 
+              id="urlInput"
+              data-i18n-placeholder="urlPlaceholder"
+              placeholder="https://www.youtube.com/watch?v=..." 
+              required
+              autocomplete="off"
+              class="w-full pl-12 pr-28 py-4 bg-white/5 border border-white/5 focus:border-indigo-500/60 rounded-xl sm:rounded-2xl text-white text-sm sm:text-base outline-none transition placeholder:text-slate-500"
+            />
+            
+            <button 
+              type="button" 
+              id="pasteBtn"
+              onclick="handlePasteClipboard()"
+              title="Colar da área de transferência"
+              class="absolute right-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs text-slate-300 font-semibold flex items-center gap-1.5 transition">
+              <i class="fa-regular fa-clipboard"></i>
+              <span data-i18n="pasteBtn">Colar</span>
+            </button>
+          </div>
+
+          <button 
+            type="submit" 
+            id="submitBtn"
+            class="w-full sm:w-auto px-7 py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 flex-shrink-0 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-magnifying-glass" id="btnIcon"></i>
+            <span id="btnText" data-i18n="analyzeBtn">Analisar Vídeo</span>
+          </button>
+        </form>
+
+        <div id="detectionNotice" class="hidden mt-3 px-3 py-1.5 text-xs text-left text-slate-400 flex items-center justify-between border-t border-white/5">
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span id="detectionText">Plataforma detectada: <strong class="text-white">YouTube</strong></span>
+          </div>
+          <button type="button" onclick="clearInput()" class="text-slate-500 hover:text-rose-400 text-xs transition" data-i18n="clearBtn">Limpar</button>
+        </div>
+      </div>
+
+      <!-- FEEDBACK / MENSAGEM DE ERRO -->
+      <div id="toastMessage" class="hidden mt-4 px-4 py-2.5 rounded-xl text-xs font-semibold glass-panel text-rose-400 border border-rose-500/20 flex items-center gap-2">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span id="toastText">Por favor, insira um link válido.</span>
+      </div>
+
+      <!-- CARD DE RESULTADO / DOWNLOAD -->
+      <div id="resultCard" class="hidden w-full max-w-3xl mt-8 glass-panel p-5 sm:p-7 rounded-3xl border border-white/10 text-left transition-all duration-500 opacity-0 translate-y-4">
+        
+        <div class="flex flex-col md:flex-row gap-6">
+          
+          <!-- Thumbnail -->
+          <div class="relative w-full md:w-56 h-48 md:h-auto rounded-2xl overflow-hidden bg-slate-800 flex-shrink-0 group">
+            <img id="resThumb" src="" alt="Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <span id="resDuration" class="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-[11px] font-bold px-2 py-0.5 rounded-md text-white">00:00</span>
+            <span id="resPlatformBadge" class="absolute top-2 left-2 bg-red-600/90 text-white text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md">
+              <i class="fa-brands fa-youtube"></i> YouTube
+            </span>
+          </div>
+
+          <!-- Informações e Seletores -->
+          <div class="flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 mb-1.5 text-xs text-emerald-400 font-semibold">
+                <i class="fa-solid fa-check-circle"></i> <span data-i18n="linkVerified">Link verificado com sucesso</span>
+              </div>
+              <h2 id="resTitle" class="text-base sm:text-xl font-bold text-white mb-2 line-clamp-2">Título do Vídeo</h2>
+              <div class="flex items-center gap-3 text-xs text-slate-400 mb-4">
+                <span id="resAuthor"><i class="fa-regular fa-user mr-1"></i> <span data-i18n="unknownAuthor">Desconhecido</span></span>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2" data-i18n="qualityLabel">Selecione o Formato & Qualidade:</label>
+                <select id="formatSelect" class="w-full p-3 bg-white/5 border border-white/10 focus:border-indigo-500/60 rounded-xl text-white text-sm outline-none transition cursor-pointer">
+                  <!-- Opções serão injetadas via JS -->
+                </select>
+              </div>
+
+              <!-- Ação de Baixar com Progresso REAL -->
+              <div class="pt-1">
+                <button 
+                  id="startDownloadBtn" 
+                  onclick="triggerRealDownload()"
+                  class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed">
+                  <i class="fa-solid fa-arrow-down-to-bracket" id="dlBtnIcon"></i>
+                  <span id="dlBtnText" data-i18n="downloadBtn">Baixar Agora</span>
                 </button>
-            </div>
 
-            <div id="resultArea" style="display: none;">
-                <div class="flex flex-col md:flex-row gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
-                    <img id="thumbnail" src="" alt="Thumbnail" class="w-full md:w-48 rounded-lg object-cover shadow">
-                    <div class="flex-1">
-                        <h2 id="videoTitle" class="text-xl font-bold text-gray-800 mb-2"></h2>
-                        <p class="text-sm text-gray-500 mb-1"><span data-i18n="byLabel">Por:</span> <span id="videoUploader"></span></p>
-                        <p class="text-gray-600 mb-4"><span data-i18n="durationLabel">Duração:</span> <span id="videoDuration"></span></p>
-                        
-                        <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="qualityLabel">Qualidade disponível:</label>
-                        <select id="formatSelect" class="w-full p-2 border border-gray-300 rounded-lg mb-4"></select>
-
-                        <button id="btnDownload" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold cursor-pointer">
-                            <i class="fas fa-file-download mr-2"></i><span data-i18n="downloadBtn">Baixar Vídeo</span>
-                        </button>
-                        
-                        <button id="btnDownloadAudio" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-semibold cursor-pointer mt-4">
-                            <i class="fas fa-music mr-2"></i><span data-i18n="downloadAudioBtn">Baixar Áudio (MP3)</span>
-                        </button>
-                    </div>
+                <!-- Barra de Progresso REAL -->
+                <div id="progressContainer" class="hidden mt-4">
+                  <div class="flex justify-between text-xs text-slate-400 mb-1.5">
+                    <span id="progressLabel" data-i18n="processingText">Processando...</span>
+                    <span id="progressPercent">0%</span>
+                  </div>
+                  <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-200 w-0"></div>
+                  </div>
                 </div>
+              </div>
             </div>
-
-            <div id="loading" style="display: none;" class="text-center py-8">
-                <i class="fas fa-spinner fa-spin text-4xl text-indigo-600"></i>
-                <p class="text-gray-600 mt-2" data-i18n="processingText">Processando vídeo...</p>
-            </div>
-
-            <div id="errorMessage" style="display: none;" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4"></div>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Seção de Recursos -->
+    <section id="recursos" class="py-16 border-t border-white/5 bg-white/[0.01]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-14">
+          <h2 class="font-display text-2xl sm:text-3xl font-bold text-white mb-3" data-i18n="featuresTitle">Construído para máxima eficiência</h2>
+          <p class="text-slate-400 text-sm" data-i18n="featuresSubtitle">Toda a arquitetura foi pensada para entregar a conversão mais rápida com preservação de fidelidade.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="glass-panel p-6 rounded-2xl hover:border-indigo-500/30 transition group">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat1Title">Sem Marcas D'água</h3>
+            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat1Desc">Vídeos são extraídos de forma limpa, sem logos sobrepostas ou bordas indesejadas.</p>
+          </div>
+          <div class="glass-panel p-6 rounded-2xl hover:border-purple-500/30 transition group">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-gauge-high"></i>
+            </div>
+            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat2Title">Velocidade Extrema</h3>
+            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat2Desc">Servidores dedicados com CDN acelerada para entrega imediata sem filas.</p>
+          </div>
+          <div class="glass-panel p-6 rounded-2xl hover:border-pink-500/30 transition group">
+            <div class="w-12 h-12 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-music"></i>
+            </div>
+            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat3Title">Extração de Áudio MP3</h3>
+            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat3Desc">Converta qualquer clipe, podcast ou show musical diretamente para MP3 em 320kbps.</p>
+          </div>
+          <div class="glass-panel p-6 rounded-2xl hover:border-emerald-500/30 transition group">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat4Title">Seguro & Anônimo</h3>
+            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat4Desc">Não armazenamos nenhum vídeo ou histórico dos links baixados. Total privacidade.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-16 border-t border-white/5">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6">
+        <div class="text-center mb-10">
+          <h2 class="font-display text-2xl sm:text-3xl font-bold text-white mb-2" data-i18n="faqTitle">Perguntas Frequentes</h2>
+        </div>
+        <div class="space-y-3">
+          <div class="glass-panel rounded-2xl overflow-hidden border border-white/10">
+            <button onclick="toggleFaq(this)" class="w-full p-4 sm:p-5 text-left font-bold text-white flex items-center justify-between text-sm sm:text-base hover:bg-white/5 transition">
+              <span data-i18n="faq1Q">É necessário instalar algum programa?</span>
+              <i class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+            </button>
+            <div class="faq-content hidden px-5 pb-5 text-xs sm:text-sm text-slate-400 border-t border-white/5 pt-3" data-i18n="faq1A">
+              Não. O OmniDrop funciona diretamente no seu navegador, tanto no celular quanto no computador.
+            </div>
+          </div>
+          <div class="glass-panel rounded-2xl overflow-hidden border border-white/10">
+            <button onclick="toggleFaq(this)" class="w-full p-4 sm:p-5 text-left font-bold text-white flex items-center justify-between text-sm sm:text-base hover:bg-white/5 transition">
+              <span data-i18n="faq2Q">O serviço é 100% gratuito?</span>
+              <i class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+            </button>
+            <div class="faq-content hidden px-5 pb-5 text-xs sm:text-sm text-slate-400 border-t border-white/5 pt-3" data-i18n="faq2A">
+              Sim, é totalmente gratuito. Você pode baixar quantos vídeos e áudios desejar sem cobranças ou cadastro.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="border-t border-white/10 bg-[#07080c] py-12 text-slate-400 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
+          <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
+        </div>
+        <div>
+          <span class="font-display font-bold text-white text-base">OmniDrop</span>
+          <p class="text-[11px] text-slate-500" data-i18n="footerText">Desenvolvido para fins educacionais. Respeite os direitos autorais.</p>
+        </div>
+      </div>
     </div>
+  </footer>
 
-    <!-- Rodapé -->
-    <footer class="mt-8 text-gray-500 text-sm text-center pb-4">
-        <p data-i18n="footerText">Apenas para fins educacionais. Respeite os direitos autorais.</p>
-    </footer>
+  <!-- JavaScript Real e Funcional -->
+  <script>
+    // ========== SISTEMA DE TRADUÇÕES ==========
+    const translations = {
+      pt: {
+        pageTitle: "OmniDrop • Baixador de Vídeos",
+        badgeText: "Sem limites, 100% gratuito e sem marcas d'água",
+        heroTitle1: "Baixe vídeos e áudios com",
+        heroTitle2: "qualidade máxima instantânea",
+        heroSubtitle: "Cole o link de qualquer vídeo do YouTube, TikTok, Instagram, Pinterest ou Facebook para baixar em MP4 ou MP3.",
+        urlPlaceholder: "https://www.youtube.com/watch?v=...",
+        pasteBtn: "Colar",
+        analyzeBtn: "Analisar Vídeo",
+        clearBtn: "Limpar",
+        linkVerified: "Link verificado com sucesso",
+        unknownAuthor: "Desconhecido",
+        qualityLabel: "Selecione o Formato & Qualidade:",
+        downloadBtn: "Baixar Agora",
+        downloadingText: "Baixando... (aguarde)",
+        processingText: "Processando stream...",
+        featuresTitle: "Construído para máxima eficiência",
+        featuresSubtitle: "Arquitetura pensada para entregar a conversão mais rápida com preservação de fidelidade.",
+        feat1Title: "Sem Marcas D'água",
+        feat1Desc: "Vídeos são extraídos de forma limpa, sem logos sobrepostas.",
+        feat2Title: "Velocidade Extrema",
+        feat2Desc: "Servidores dedicados com CDN acelerada para entrega imediata.",
+        feat3Title: "Extração de Áudio MP3",
+        feat3Desc: "Converta qualquer clipe ou show musical diretamente para MP3 em 320kbps.",
+        feat4Title: "Seguro & Anônimo",
+        feat4Desc: "Não armazenamos nenhum vídeo ou histórico dos links baixados.",
+        faqTitle: "Perguntas Frequentes",
+        faq1Q: "É necessário instalar algum programa?",
+        faq1A: "Não. O OmniDrop funciona diretamente no seu navegador, tanto no celular quanto no computador.",
+        faq2Q: "O serviço é 100% gratuito?",
+        faq2A: "Sim, é totalmente gratuito. Você pode baixar quantos vídeos desejar sem cobranças.",
+        footerText: "Desenvolvido para fins educacionais. Respeite os direitos autorais.",
+        alertInvalidUrl: "Por favor, insira uma URL válida.",
+        alertDownloadError: "Erro ao baixar: "
+      },
+      en: {
+        pageTitle: "OmniDrop • Video Downloader",
+        badgeText: "No limits, 100% free and watermark-free",
+        heroTitle1: "Download videos and audio with",
+        heroTitle2: "instant maximum quality",
+        heroSubtitle: "Paste the link of any video from YouTube, TikTok, Instagram, Pinterest or Facebook to download in MP4 or MP3.",
+        urlPlaceholder: "https://www.youtube.com/watch?v=...",
+        pasteBtn: "Paste",
+        analyzeBtn: "Analyze Video",
+        clearBtn: "Clear",
+        linkVerified: "Link verified successfully",
+        unknownAuthor: "Unknown",
+        qualityLabel: "Select Format & Quality:",
+        downloadBtn: "Download Now",
+        downloadingText: "Downloading... (please wait)",
+        processingText: "Processing stream...",
+        featuresTitle: "Built for maximum efficiency",
+        featuresSubtitle: "Architecture designed to deliver the fastest conversion with fidelity preservation.",
+        feat1Title: "No Watermarks",
+        feat1Desc: "Videos are extracted cleanly, without overlaid logos.",
+        feat2Title: "Extreme Speed",
+        feat2Desc: "Dedicated servers with accelerated CDN for immediate delivery.",
+        feat3Title: "MP3 Audio Extraction",
+        feat3Desc: "Convert any clip or music show directly to MP3 at 320kbps.",
+        feat4Title: "Safe & Anonymous",
+        feat4Desc: "We do not store any video or history of downloaded links.",
+        faqTitle: "Frequently Asked Questions",
+        faq1Q: "Do I need to install any software?",
+        faq1A: "No. OmniDrop works directly in your browser, on both mobile and desktop.",
+        faq2Q: "Is the service 100% free?",
+        faq2A: "Yes, it is completely free. You can download as many videos as you want without charges.",
+        footerText: "Developed for educational purposes. Respect copyright laws.",
+        alertInvalidUrl: "Please enter a valid URL.",
+        alertDownloadError: "Download error: "
+      },
+      es: {
+        pageTitle: "OmniDrop • Descargador de Videos",
+        badgeText: "Sin límites, 100% gratis y sin marcas de agua",
+        heroTitle1: "Descarga videos y audio con",
+        heroTitle2: "máxima calidad instantánea",
+        heroSubtitle: "Pega el enlace de cualquier video de YouTube, TikTok, Instagram, Pinterest o Facebook para descargar en MP4 o MP3.",
+        urlPlaceholder: "https://www.youtube.com/watch?v=...",
+        pasteBtn: "Pegar",
+        analyzeBtn: "Analizar Video",
+        clearBtn: "Limpiar",
+        linkVerified: "Enlace verificado con éxito",
+        unknownAuthor: "Desconocido",
+        qualityLabel: "Selecciona Formato y Calidad:",
+        downloadBtn: "Descargar Ahora",
+        downloadingText: "Descargando... (espere)",
+        processingText: "Procesando stream...",
+        featuresTitle: "Construido para máxima eficiencia",
+        featuresSubtitle: "Arquitectura diseñada para entregar la conversión más rápida con preservación de fidelidad.",
+        feat1Title: "Sin Marcas de Agua",
+        feat1Desc: "Los videos se extraen limpiamente, sin logos superpuestos.",
+        feat2Title: "Velocidad Extrema",
+        feat2Desc: "Servidores dedicados con CDN acelerada para entrega inmediata.",
+        feat3Title: "Extracción de Audio MP3",
+        feat3Desc: "Convierte cualquier clip o show musical directamente a MP3 a 320kbps.",
+        feat4Title: "Seguro y Anónimo",
+        feat4Desc: "No almacenamos ningún video ni historial de enlaces descargados.",
+        faqTitle: "Preguntas Frecuentes",
+        faq1Q: "¿Necesito instalar algún programa?",
+        faq1A: "No. OmniDrop funciona directamente en tu navegador, tanto en móvil como en PC.",
+        faq2Q: "¿El servicio es 100% gratuito?",
+        faq2A: "Sí, es completamente gratuito. Puedes descargar cuantos videos quieras sin cargos.",
+        footerText: "Desarrollado con fines educativos. Respete los derechos de autor.",
+        alertInvalidUrl: "Por favor, ingrese una URL válida.",
+        alertDownloadError: "Error al descargar: "
+      }
+    };
 
-    <script>
-        // ========== SISTEMA DE TRADUÇÕES ==========
-        const translations = {
-            pt: {
-                pageTitle: "Baixador de Vídeos",
-                title: "Baixador de Vídeos",
-                subtitle: "Cole a URL do vídeo para começar",
-                urlPlaceholder: "https://www.youtube.com/watch?v=...",
-                searchBtn: "Buscar",
-                byLabel: "Por:",
-                durationLabel: "Duração:",
-                qualityLabel: "Qualidade disponível:",
-                downloadBtn: "Baixar Vídeo",
-                downloadAudioBtn: "Baixar Áudio (MP3)",
-                processingText: "Processando vídeo...",
-                downloadingText: "Baixando e processando... (aguarde)",
-                downloadingAudioText: "Extraindo áudio... (aguarde)",
-                footerText: "Apenas para fins educacionais. Respeite os direitos autorais.",
-                alertInvalidUrl: "Por favor, insira uma URL válida.",
-                alertDownloadError: "Erro ao baixar: "
-            },
-            en: {
-                pageTitle: "Video Downloader",
-                title: "Video Downloader",
-                subtitle: "Paste the video URL to start",
-                urlPlaceholder: "https://www.youtube.com/watch?v=...",
-                searchBtn: "Search",
-                byLabel: "By:",
-                durationLabel: "Duration:",
-                qualityLabel: "Available quality:",
-                downloadBtn: "Download Video",
-                downloadAudioBtn: "Download Audio (MP3)",
-                processingText: "Processing video...",
-                downloadingText: "Downloading and processing... (please wait)",
-                downloadingAudioText: "Extracting audio... (please wait)",
-                footerText: "For educational purposes only. Respect copyright laws.",
-                alertInvalidUrl: "Please enter a valid URL.",
-                alertDownloadError: "Download error: "
-            },
-            es: {
-                pageTitle: "Descargador de Videos",
-                title: "Descargador de Videos",
-                subtitle: "Pega la URL del video para comenzar",
-                urlPlaceholder: "https://www.youtube.com/watch?v=...",
-                searchBtn: "Buscar",
-                byLabel: "Por:",
-                durationLabel: "Duración:",
-                qualityLabel: "Calidad disponible:",
-                downloadBtn: "Descargar Video",
-                downloadAudioBtn: "Descargar Audio (MP3)",
-                processingText: "Procesando video...",
-                downloadingText: "Descargando y procesando... (espere)",
-                downloadingAudioText: "Extrayendo audio... (espere)",
-                footerText: "Solo para fines educativos. Respete los derechos de autor.",
-                alertInvalidUrl: "Por favor, ingrese una URL válida.",
-                alertDownloadError: "Error al descargar: "
-            }
-        };
+    let currentLang = 'pt';
 
-        let currentLang = 'pt';
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (t[key]) el.placeholder = t[key];
+      });
+      document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang === 'es' ? 'es' : 'en';
+      localStorage.setItem('preferredLanguage', lang);
+    }
 
-        function setLanguage(lang) {
-            currentLang = lang;
-            const t = translations[lang];
-            
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (t[key]) el.textContent = t[key];
-            });
-            
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (t[key]) el.placeholder = t[key];
-            });
-            
-            document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang === 'es' ? 'es' : 'en';
-            localStorage.setItem('preferredLanguage', lang);
+    function detectBrowserLanguage() {
+      const saved = localStorage.getItem('preferredLanguage');
+      if (saved && translations[saved]) return saved;
+      const browserLang = navigator.language || navigator.userLanguage;
+      if (browserLang.startsWith('es')) return 'es';
+      if (browserLang.startsWith('en')) return 'en';
+      return 'pt';
+    }
+
+    document.getElementById('languageSelect').addEventListener('change', function() {
+      setLanguage(this.value);
+    });
+
+    // ========== TEMA DARK/LIGHT ==========
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    let isDark = true;
+
+    themeToggleBtn.addEventListener('click', () => {
+      isDark = !isDark;
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.body.classList.remove('bg-slate-50', 'text-slate-900');
+        document.body.classList.add('bg-[#090a0f]', 'text-slate-100');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        document.body.classList.remove('bg-[#090a0f]', 'text-slate-100');
+        document.body.classList.add('bg-slate-50', 'text-slate-900');
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+      }
+    });
+
+    // ========== DETECÇÃO DE PLATAFORMA ==========
+    const urlInput = document.getElementById('urlInput');
+    const detectedPlatformIcon = document.getElementById('detectedPlatformIcon');
+    const detectionNotice = document.getElementById('detectionNotice');
+    const detectionText = document.getElementById('detectionText');
+
+    const platformConfigs = {
+      youtube: { name: 'YouTube', icon: 'fa-brands fa-youtube', color: 'text-red-500', bg: 'bg-red-600' },
+      instagram: { name: 'Instagram', icon: 'fa-brands fa-instagram', color: 'text-pink-500', bg: 'bg-pink-600' },
+      tiktok: { name: 'TikTok', icon: 'fa-brands fa-tiktok', color: 'text-cyan-400', bg: 'bg-black' },
+      pinterest: { name: 'Pinterest', icon: 'fa-brands fa-pinterest', color: 'text-rose-500', bg: 'bg-rose-600' },
+      facebook: { name: 'Facebook', icon: 'fa-brands fa-facebook', color: 'text-blue-500', bg: 'bg-blue-600' },
+    };
+
+    function detectPlatform(val) {
+      val = val.toLowerCase();
+      if (val.includes('youtu.be') || val.includes('youtube.com')) return 'youtube';
+      if (val.includes('instagram.com')) return 'instagram';
+      if (val.includes('tiktok.com')) return 'tiktok';
+      if (val.includes('pinterest.com') || val.includes('pin.it')) return 'pinterest';
+      if (val.includes('facebook.com') || val.includes('fb.watch')) return 'facebook';
+      return null;
+    }
+
+    urlInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      const detected = detectPlatform(val);
+      if (detected) {
+        const info = platformConfigs[detected];
+        detectedPlatformIcon.innerHTML = `<i class="${info.icon} ${info.color}"></i>`;
+        detectionNotice.classList.remove('hidden');
+        detectionText.innerHTML = `Plataforma detectada: <strong class="text-white">${info.name}</strong>`;
+      } else {
+        detectedPlatformIcon.innerHTML = '<i class="fa-solid fa-link"></i>';
+        if (!val) detectionNotice.classList.add('hidden');
+        else {
+          detectionNotice.classList.remove('hidden');
+          detectionText.innerHTML = `Link geral detectado`;
+        }
+      }
+    });
+
+    async function handlePasteClipboard() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            urlInput.value = text;
+            urlInput.dispatchEvent(new Event('input'));
+          }
+        } else {
+          urlInput.focus();
+        }
+      } catch (err) {
+        urlInput.focus();
+      }
+    }
+
+    function clearInput() {
+      urlInput.value = '';
+      detectedPlatformIcon.innerHTML = '<i class="fa-solid fa-link"></i>';
+      detectionNotice.classList.add('hidden');
+      document.getElementById('resultCard').classList.add('hidden');
+    }
+
+    // ========== LÓGICA REAL DA API ==========
+    const API_URL = "/api";
+    let currentVideoData = null;
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      document.getElementById('toastText').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    async function handleAnalyze(e) {
+      if (e) e.preventDefault();
+      const url = urlInput.value.trim();
+      if (!url) {
+        showToast(translations[currentLang].alertInvalidUrl);
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      const btnIcon = document.getElementById('btnIcon');
+      const btnText = document.getElementById('btnText');
+      
+      btn.disabled = true;
+      btnIcon.className = 'fa-solid fa-spinner fa-spin';
+      btnText.textContent = '...';
+
+      try {
+        const response = await fetch(API_URL + '/info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
+        const data = await response.json();
+
+        if (data.detail) {
+          showToast(data.detail);
+          throw new Error(data.detail);
         }
 
-        function detectBrowserLanguage() {
-            const saved = localStorage.getItem('preferredLanguage');
-            if (saved && translations[saved]) return saved;
-            
-            const browserLang = navigator.language || navigator.userLanguage;
-            if (browserLang.startsWith('es')) return 'es';
-            if (browserLang.startsWith('en')) return 'en';
-            return 'pt';
+        currentVideoData = data;
+        
+        // Preencher UI
+        document.getElementById('resThumb').src = data.thumbnail || 'https://via.placeholder.com/400x225?text=No+Thumbnail';
+        document.getElementById('resTitle').textContent = data.title;
+        document.getElementById('resAuthor').innerHTML = `<i class="fa-regular fa-user mr-1"></i> ${data.uploader || translations[currentLang].unknownAuthor}`;
+        
+        const mins = Math.floor((data.duration || 0) / 60);
+        const secs = (data.duration || 0) % 60;
+        document.getElementById('resDuration').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+        const detected = detectPlatform(url) || 'youtube';
+        const info = platformConfigs[detected];
+        const badge = document.getElementById('resPlatformBadge');
+        badge.className = `absolute top-2 left-2 ${info.bg} text-white text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md`;
+        badge.innerHTML = `<i class="${info.icon}"></i> ${info.name}`;
+
+        // Preencher Select de Qualidade
+        const select = document.getElementById('formatSelect');
+        select.innerHTML = '';
+        
+        // Opção MP3 sempre no topo
+        const mp3Opt = document.createElement('option');
+        mp3Opt.value = 'mp3';
+        mp3Opt.textContent = '🎵 MP3 (Áudio de Alta Qualidade - 320kbps)';
+        select.appendChild(mp3Opt);
+
+        // Opções de vídeo da API
+        data.formats.forEach(fmt => {
+          const opt = document.createElement('option');
+          opt.value = fmt.format_id;
+          opt.textContent = `🎬 ${fmt.resolution} - ${fmt.ext.toUpperCase()}`;
+          select.appendChild(opt);
+        });
+
+        // Mostrar card com animação
+        const resCard = document.getElementById('resultCard');
+        resCard.classList.remove('hidden');
+        setTimeout(() => {
+          resCard.classList.remove('opacity-0', 'translate-y-4');
+          resCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 30);
+
+      } catch (error) {
+        console.error(error);
+      } finally {
+        btn.disabled = false;
+        btnIcon.className = 'fa-solid fa-magnifying-glass';
+        btnText.textContent = translations[currentLang].analyzeBtn;
+      }
+    }
+
+    // ========== DOWNLOAD REAL COM BARRA DE PROGRESSO ==========
+    function triggerRealDownload() {
+      if (!currentVideoData || !urlInput.value.trim()) return;
+
+      const formatValue = document.getElementById('formatSelect').value;
+      const isAudio = (formatValue === 'mp3');
+      const endpoint = isAudio ? API_URL + '/download-audio' : API_URL + '/download';
+      
+      const payload = isAudio ? { url: urlInput.value.trim() } : { url: urlInput.value.trim(), format_id: formatValue };
+
+      const btn = document.getElementById('startDownloadBtn');
+      const btnIcon = document.getElementById('dlBtnIcon');
+      const btnText = document.getElementById('dlBtnText');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const progressLabel = document.getElementById('progressLabel');
+      const progressPercent = document.getElementById('progressPercent');
+
+      // UI de carregamento
+      btn.disabled = true;
+      btnIcon.className = 'fa-solid fa-spinner fa-spin';
+      btnText.textContent = translations[currentLang].downloadingText;
+      progressContainer.classList.remove('hidden');
+      progressBar.style.width = '0%';
+      progressPercent.textContent = '0%';
+      progressLabel.textContent = translations[currentLang].processingText;
+
+      // XMLHttpRequest para progresso real de download
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', endpoint, true);
+      xhr.responseType = 'blob';
+
+      xhr.onprogress = function(event) {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          progressBar.style.width = percentComplete + '%';
+          progressPercent.textContent = percentComplete + '%';
+          if (percentComplete > 10 && percentComplete < 90) {
+            progressLabel.textContent = isAudio ? 'Extraindo e baixando áudio...' : 'Baixando pacotes de vídeo...';
+          } else if (percentComplete >= 90) {
+            progressLabel.textContent = 'Finalizando arquivo...';
+          }
         }
+      };
 
-        // ========== LÓGICA DO APP ==========
-        const API_URL = "/api";
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          progressBar.style.width = '100%';
+          progressPercent.textContent = '100%';
+          progressLabel.textContent = '✓ Download pronto!';
+          
+          // Extrair nome do arquivo do header
+          const disposition = xhr.getResponseHeader('Content-Disposition') || '';
+          let filename = isAudio ? 'audio.mp3' : 'video.mp4';
+          const match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+          if (match && match[1]) {
+            filename = decodeURIComponent(match[1]);
+          }
 
-        document.getElementById('languageSelect').addEventListener('change', function() {
-            setLanguage(this.value);
-        });
+          const blob = xhr.response;
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(downloadUrl);
 
-        document.getElementById('btnSearch').addEventListener('click', function() {
-            const url = document.getElementById('videoUrl').value.trim();
-            if (!url) { 
-                alert(translations[currentLang].alertInvalidUrl); 
-                return; 
+          // Resetar botão após 3 segundos
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            btn.disabled = false;
+            btnIcon.className = 'fa-solid fa-arrow-down-to-bracket';
+            btnText.textContent = translations[currentLang].downloadBtn;
+          }, 3000);
+
+        } else {
+          // Tratar erro do servidor
+          const reader = new FileReader();
+          reader.onload = function() {
+            try {
+              const err = JSON.parse(reader.result);
+              showToast(translations[currentLang].alertDownloadError + (err.detail || 'Erro desconhecido'));
+            } catch (e) {
+              showToast(translations[currentLang].alertDownloadError + 'Falha no servidor');
             }
-            
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('resultArea').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('btnSearch').disabled = true;
-            
-            fetch(API_URL + '/info', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url })
-            })
-            .then(r => r.json())
-            .then(data => {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('btnSearch').disabled = false;
-                if (data.detail) {
-                    document.getElementById('errorMessage').textContent = data.detail;
-                    document.getElementById('errorMessage').style.display = 'block';
-                    return;
-                }
-                document.getElementById('videoTitle').textContent = data.title;
-                document.getElementById('videoUploader').textContent = data.uploader;
-                document.getElementById('thumbnail').src = data.thumbnail;
-                const mins = Math.floor(data.duration / 60);
-                document.getElementById('videoDuration').textContent = mins + " min";
-                
-                const select = document.getElementById('formatSelect');
-                select.innerHTML = '';
-                data.formats.forEach(function(fmt) {
-                    const option = document.createElement('option');
-                    option.value = fmt.format_id;
-                    option.textContent = fmt.resolution + " - " + fmt.ext.toUpperCase();
-                    select.appendChild(option);
-                });
-                document.getElementById('resultArea').style.display = 'block';
-            })
-            .catch(error => {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('btnSearch').disabled = false;
-                document.getElementById('errorMessage').textContent = error.message;
-                document.getElementById('errorMessage').style.display = 'block';
-            });
-        });
+            resetDownloadUI();
+          };
+          reader.readAsText(xhr.response);
+        }
+      };
 
-        document.getElementById('btnDownload').addEventListener('click', function() {
-            const url = document.getElementById('videoUrl').value.trim();
-            const formatId = document.getElementById('formatSelect').value;
-            const btn = document.getElementById('btnDownload');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + translations[currentLang].downloadingText;
+      xhr.onerror = function() {
+        showToast(translations[currentLang].alertDownloadError + 'Erro de rede');
+        resetDownloadUI();
+      };
 
-            let filename = "video.mp4";
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(JSON.stringify(payload));
 
-            fetch(API_URL + '/download', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url, format_id: formatId })
-            })
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.json().then(function(data) { throw new Error(data.detail || "Falha ao baixar"); });
-                }
-                const cd = response.headers.get('Content-Disposition') || '';
-                const m = cd.match(/filename\*=UTF-8''([^;]+)/i);
-                if (m) filename = decodeURIComponent(m[1]);
-                return response.blob();
-            })
-            .then(function(blob) {
-                const downloadUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(downloadUrl);
-            })
-            .catch(function(error) { 
-                alert(translations[currentLang].alertDownloadError + error.message); 
-            })
-            .finally(function() { 
-                btn.disabled = false; 
-                btn.innerHTML = '<i class="fas fa-file-download mr-2"></i>' + translations[currentLang].downloadBtn; 
-            });
-        });
+      function resetDownloadUI() {
+        progressContainer.classList.add('hidden');
+        btn.disabled = false;
+        btnIcon.className = 'fa-solid fa-arrow-down-to-bracket';
+        btnText.textContent = translations[currentLang].downloadBtn;
+      }
+    }
 
-        document.getElementById('btnDownloadAudio').addEventListener('click', function() {
-            const url = document.getElementById('videoUrl').value.trim();
-            const btn = document.getElementById('btnDownloadAudio');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + translations[currentLang].downloadingAudioText;
+    // ========== FAQ ACCORDION ==========
+    function toggleFaq(btn) {
+      const content = btn.nextElementSibling;
+      const icon = btn.querySelector('.fa-chevron-down');
+      const isOpen = !content.classList.contains('hidden');
 
-            let filename = "audio.mp3";
+      document.querySelectorAll('.faq-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('#faq .fa-chevron-down').forEach(i => i.classList.remove('rotate-180'));
 
-            fetch(API_URL + '/download-audio', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url })
-            })
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.json().then(function(data) { throw new Error(data.detail || "Falha ao baixar áudio"); });
-                }
-                const cd = response.headers.get('Content-Disposition') || '';
-                const m = cd.match(/filename\*=UTF-8''([^;]+)/i);
-                if (m) filename = decodeURIComponent(m[1]);
-                return response.blob();
-            })
-            .then(function(blob) {
-                const downloadUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(downloadUrl);
-            })
-            .catch(function(error) { 
-                alert(translations[currentLang].alertDownloadError + error.message); 
-            })
-            .finally(function() { 
-                btn.disabled = false; 
-                btn.innerHTML = '<i class="fas fa-music mr-2"></i>' + translations[currentLang].downloadAudioBtn; 
-            });
-        });
+      if (!isOpen) {
+        content.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+      }
+    }
 
-        const initialLang = detectBrowserLanguage();
-        document.getElementById('languageSelect').value = initialLang;
-        setLanguage(initialLang);
-    </script>
+    // Inicialização
+    const initialLang = detectBrowserLanguage();
+    document.getElementById('languageSelect').value = initialLang;
+    setLanguage(initialLang);
+  </script>
 </body>
 </html>
