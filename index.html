@@ -1,355 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR" class="dark scroll-smooth">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="pageTitle">OmniDrop • Baixador de Vídeos Multiplataforma HD & 4K</title>
-  <meta name="description" content="Baixe vídeos do YouTube, Instagram, Facebook, TikTok e mais de 1000 sites. Rápido, grátis e sem instalação.">
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-            display: ['Space Grotesk', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#f5f3ff',
-              100: '#ede9fe',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-            },
-            darkBg: '#090a0f',
-            darkCard: '#11131f',
-          },
-          animation: {
-            'glow-pulse': 'glow 8s ease-in-out infinite alternate',
-            'float-slow': 'float 6s ease-in-out infinite',
-          },
-          keyframes: {
-            glow: {
-              '0%': { transform: 'scale(1) translate(0px, 0px)', opacity: '0.45' },
-              '100%': { transform: 'scale(1.15) translate(25px, -20px)', opacity: '0.75' },
-            },
-            float: {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-8px)' },
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-  <style>
-    .glass-panel {
-      background: rgba(17, 19, 31, 0.72);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .light .glass-panel {
-      background: rgba(255, 255, 255, 0.85);
-      border: 1px solid rgba(0, 0, 0, 0.07);
-    }
-    .mesh-gradient {
-      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.22) 0%, rgba(168, 85, 247, 0.12) 35%, transparent 70%);
-    }
-    .light .mesh-gradient {
-      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.14) 0%, rgba(236, 72, 153, 0.08) 35%, transparent 75%);
-    }
-    /* Custom scrollbar for select */
-    select option {
-      background-color: #11131f;
-      color: #f8fafc;
-    }
-    .light select option {
-      background-color: #ffffff;
-      color: #0f172a;
-    }
-  </style>
-</head>
-
-<body class="bg-[#090a0f] text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300 selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
-
-  <!-- Glows decorativos de fundo -->
-  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] sm:w-[900px] h-[450px] mesh-gradient pointer-events-none -z-10"></div>
-  <div class="absolute top-24 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-  <div class="absolute top-72 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-
-  <!-- Header / Barra de Navegação -->
-  <header class="w-full sticky top-0 z-40 border-b border-white/5 bg-[#090a0f]/80 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      
-      <!-- Logo -->
-      <a href="#" class="flex items-center gap-3 group">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-300">
-          <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
-        </div>
-        <div>
-          <span class="font-display font-bold text-xl sm:text-2xl tracking-tight text-white flex items-center gap-1.5">
-            Omni<span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">Drop</span>
-          </span>
-          <span class="text-[10px] uppercase font-semibold tracking-wider text-indigo-400 block -mt-1">Media Saver Pro</span>
-        </div>
-      </a>
-
-      <!-- Ações do Cabeçalho -->
-      <div class="flex items-center gap-3">
-        <!-- Idioma Dropdown -->
-        <div class="relative">
-          <select id="languageSelect" class="appearance-none bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 border border-white/10 rounded-xl px-3 py-2 pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-            <option value="pt">🇧🇷 PT-BR</option>
-            <option value="en">🇺🇸 English</option>
-            <option value="es">🇪🇸 Español</option>
-          </select>
-          <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
-        </div>
-
-        <!-- Botão Alternador de Tema -->
-        <button id="themeToggle" title="Alternar Modo Escuro/Claro" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition">
-          <i class="fa-regular fa-sun text-sm" id="themeIcon"></i>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Conteúdo Principal -->
-  <main class="flex-1">
-    
-    <!-- Hero & Área de Input -->
-    <section id="ferramenta" class="pt-12 pb-20 px-4 sm:px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
-      
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-pink-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold mb-6">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span data-i18n="badgeText">Sem limites, 100% gratuito e sem marcas d'água</span>
-      </div>
-
-      <h1 class="font-display text-4xl sm:text-6xl font-bold tracking-tight text-white mb-4 leading-tight max-w-4xl">
-        <span data-i18n="heroTitle1">Baixe vídeos e áudios com</span>
-        <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400" data-i18n="heroTitle2">qualidade máxima instantânea</span>
-      </h1>
-
-      <p class="text-slate-400 text-sm sm:text-lg max-w-2xl mb-8" data-i18n="heroSubtitle">
-        Cole o link de qualquer vídeo do YouTube, TikTok, Instagram Reels, Pinterest ou Facebook para baixar em MP4 Full HD / 4K ou MP3 de alta fidelidade.
-      </p>
-
-      <!-- CARD DA BARRA DE PESQUISA -->
-      <div class="w-full max-w-3xl glass-panel p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl shadow-2xl shadow-indigo-950/40 border border-white/10 relative transition-all duration-300 hover:border-indigo-500/40">
-        
-        <form id="downloadForm" onsubmit="handleAnalyze(event)" class="flex flex-col sm:flex-row items-center gap-2 w-full">
-          
-          <div class="relative w-full flex items-center">
-            <span id="detectedPlatformIcon" class="absolute left-4 text-indigo-400 text-lg transition-transform duration-300">
-              <i class="fa-solid fa-link"></i>
-            </span>
-            <input 
-              type="url" 
-              id="urlInput"
-              data-i18n-placeholder="urlPlaceholder"
-              placeholder="https://www.youtube.com/watch?v=..." 
-              required
-              autocomplete="off"
-              class="w-full pl-12 pr-28 py-4 bg-white/5 border border-white/5 focus:border-indigo-500/60 rounded-xl sm:rounded-2xl text-white text-sm sm:text-base outline-none transition placeholder:text-slate-500"
-            />
-            
-            <button 
-              type="button" 
-              id="pasteBtn"
-              onclick="handlePasteClipboard()"
-              title="Colar da área de transferência"
-              class="absolute right-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs text-slate-300 font-semibold flex items-center gap-1.5 transition">
-              <i class="fa-regular fa-clipboard"></i>
-              <span data-i18n="pasteBtn">Colar</span>
-            </button>
-          </div>
-
-          <button 
-            type="submit" 
-            id="submitBtn"
-            class="w-full sm:w-auto px-7 py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 flex-shrink-0 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
-            <i class="fa-solid fa-magnifying-glass" id="btnIcon"></i>
-            <span id="btnText" data-i18n="analyzeBtn">Analisar Vídeo</span>
-          </button>
-        </form>
-
-        <div id="detectionNotice" class="hidden mt-3 px-3 py-1.5 text-xs text-left text-slate-400 flex items-center justify-between border-t border-white/5">
-          <div class="flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            <span id="detectionText">Plataforma detectada: <strong class="text-white">YouTube</strong></span>
-          </div>
-          <button type="button" onclick="clearInput()" class="text-slate-500 hover:text-rose-400 text-xs transition" data-i18n="clearBtn">Limpar</button>
-        </div>
-      </div>
-
-      <!-- FEEDBACK / MENSAGEM DE ERRO -->
-      <div id="toastMessage" class="hidden mt-4 px-4 py-2.5 rounded-xl text-xs font-semibold glass-panel text-rose-400 border border-rose-500/20 flex items-center gap-2">
-        <i class="fa-solid fa-circle-exclamation"></i>
-        <span id="toastText">Por favor, insira um link válido.</span>
-      </div>
-
-      <!-- CARD DE RESULTADO / DOWNLOAD -->
-      <div id="resultCard" class="hidden w-full max-w-3xl mt-8 glass-panel p-5 sm:p-7 rounded-3xl border border-white/10 text-left transition-all duration-500 opacity-0 translate-y-4">
-        
-        <div class="flex flex-col md:flex-row gap-6">
-          
-          <!-- Thumbnail -->
-          <div class="relative w-full md:w-56 h-48 md:h-auto rounded-2xl overflow-hidden bg-slate-800 flex-shrink-0 group">
-            <img id="resThumb" src="" alt="Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            <span id="resDuration" class="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-[11px] font-bold px-2 py-0.5 rounded-md text-white">00:00</span>
-            <span id="resPlatformBadge" class="absolute top-2 left-2 bg-red-600/90 text-white text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md">
-              <i class="fa-brands fa-youtube"></i> YouTube
-            </span>
-          </div>
-
-          <!-- Informações e Seletores -->
-          <div class="flex-1 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center gap-2 mb-1.5 text-xs text-emerald-400 font-semibold">
-                <i class="fa-solid fa-check-circle"></i> <span data-i18n="linkVerified">Link verificado com sucesso</span>
-              </div>
-              <h2 id="resTitle" class="text-base sm:text-xl font-bold text-white mb-2 line-clamp-2">Título do Vídeo</h2>
-              <div class="flex items-center gap-3 text-xs text-slate-400 mb-4">
-                <span id="resAuthor"><i class="fa-regular fa-user mr-1"></i> <span data-i18n="unknownAuthor">Desconhecido</span></span>
-              </div>
-            </div>
-
-            <div class="space-y-4">
-              <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2" data-i18n="qualityLabel">Selecione o Formato & Qualidade:</label>
-                <select id="formatSelect" class="w-full p-3 bg-white/5 border border-white/10 focus:border-indigo-500/60 rounded-xl text-white text-sm outline-none transition cursor-pointer">
-                  <!-- Opções serão injetadas via JS -->
-                </select>
-              </div>
-
-              <!-- Ação de Baixar com Progresso REAL -->
-              <div class="pt-1">
-                <button 
-                  id="startDownloadBtn" 
-                  onclick="triggerRealDownload()"
-                  class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed">
-                  <i class="fa-solid fa-arrow-down-to-bracket" id="dlBtnIcon"></i>
-                  <span id="dlBtnText" data-i18n="downloadBtn">Baixar Agora</span>
-                </button>
-
-                <!-- Barra de Progresso REAL -->
-                <div id="progressContainer" class="hidden mt-4">
-                  <div class="flex justify-between text-xs text-slate-400 mb-1.5">
-                    <span id="progressLabel" data-i18n="processingText">Processando...</span>
-                    <span id="progressPercent">0%</span>
-                  </div>
-                  <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
-                    <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-200 w-0"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Seção de Recursos -->
-    <section id="recursos" class="py-16 border-t border-white/5 bg-white/[0.01]">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-2xl mx-auto mb-14">
-          <h2 class="font-display text-2xl sm:text-3xl font-bold text-white mb-3" data-i18n="featuresTitle">Construído para máxima eficiência</h2>
-          <p class="text-slate-400 text-sm" data-i18n="featuresSubtitle">Toda a arquitetura foi pensada para entregar a conversão mais rápida com preservação de fidelidade.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="glass-panel p-6 rounded-2xl hover:border-indigo-500/30 transition group">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-            </div>
-            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat1Title">Sem Marcas D'água</h3>
-            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat1Desc">Vídeos são extraídos de forma limpa, sem logos sobrepostas ou bordas indesejadas.</p>
-          </div>
-          <div class="glass-panel p-6 rounded-2xl hover:border-purple-500/30 transition group">
-            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-              <i class="fa-solid fa-gauge-high"></i>
-            </div>
-            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat2Title">Velocidade Extrema</h3>
-            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat2Desc">Servidores dedicados com CDN acelerada para entrega imediata sem filas.</p>
-          </div>
-          <div class="glass-panel p-6 rounded-2xl hover:border-pink-500/30 transition group">
-            <div class="w-12 h-12 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-              <i class="fa-solid fa-music"></i>
-            </div>
-            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat3Title">Extração de Áudio MP3</h3>
-            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat3Desc">Converta qualquer clipe, podcast ou show musical diretamente para MP3 em 320kbps.</p>
-          </div>
-          <div class="glass-panel p-6 rounded-2xl hover:border-emerald-500/30 transition group">
-            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-              <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <h3 class="text-white font-bold text-base mb-1.5" data-i18n="feat4Title">Seguro & Anônimo</h3>
-            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed" data-i18n="feat4Desc">Não armazenamos nenhum vídeo ou histórico dos links baixados. Total privacidade.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq" class="py-16 border-t border-white/5">
-      <div class="max-w-3xl mx-auto px-4 sm:px-6">
-        <div class="text-center mb-10">
-          <h2 class="font-display text-2xl sm:text-3xl font-bold text-white mb-2" data-i18n="faqTitle">Perguntas Frequentes</h2>
-        </div>
-        <div class="space-y-3">
-          <div class="glass-panel rounded-2xl overflow-hidden border border-white/10">
-            <button onclick="toggleFaq(this)" class="w-full p-4 sm:p-5 text-left font-bold text-white flex items-center justify-between text-sm sm:text-base hover:bg-white/5 transition">
-              <span data-i18n="faq1Q">É necessário instalar algum programa?</span>
-              <i class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
-            </button>
-            <div class="faq-content hidden px-5 pb-5 text-xs sm:text-sm text-slate-400 border-t border-white/5 pt-3" data-i18n="faq1A">
-              Não. O OmniDrop funciona diretamente no seu navegador, tanto no celular quanto no computador.
-            </div>
-          </div>
-          <div class="glass-panel rounded-2xl overflow-hidden border border-white/10">
-            <button onclick="toggleFaq(this)" class="w-full p-4 sm:p-5 text-left font-bold text-white flex items-center justify-between text-sm sm:text-base hover:bg-white/5 transition">
-              <span data-i18n="faq2Q">O serviço é 100% gratuito?</span>
-              <i class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
-            </button>
-            <div class="faq-content hidden px-5 pb-5 text-xs sm:text-sm text-slate-400 border-t border-white/5 pt-3" data-i18n="faq2A">
-              Sim, é totalmente gratuito. Você pode baixar quantos vídeos e áudios desejar sem cobranças ou cadastro.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Rodapé -->
-  <footer class="border-t border-white/10 bg-[#07080c] py-12 text-slate-400 text-xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
-          <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
-        </div>
-        <div>
-          <span class="font-display font-bold text-white text-base">OmniDrop</span>
-          <p class="text-[11px] text-slate-500" data-i18n="footerText">Desenvolvido para fins educacionais. Respeite os direitos autorais.</p>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- JavaScript Real e Funcional -->
+  <!-- JavaScript Real e Funcional Atualizado -->
   <script>
     // ========== SISTEMA DE TRADUÇÕES ==========
     const translations = {
@@ -359,7 +8,7 @@
         heroTitle1: "Baixe vídeos e áudios com",
         heroTitle2: "qualidade máxima instantânea",
         heroSubtitle: "Cole o link de qualquer vídeo do YouTube, TikTok, Instagram, Pinterest ou Facebook para baixar em MP4 ou MP3.",
-        urlPlaceholder: "https://www.youtube.com/watch?v=...",
+        urlPlaceholder: "https://...",
         pasteBtn: "Colar",
         analyzeBtn: "Analisar Vídeo",
         clearBtn: "Limpar",
@@ -394,7 +43,7 @@
         heroTitle1: "Download videos and audio with",
         heroTitle2: "instant maximum quality",
         heroSubtitle: "Paste the link of any video from YouTube, TikTok, Instagram, Pinterest or Facebook to download in MP4 or MP3.",
-        urlPlaceholder: "https://www.youtube.com/watch?v=...",
+        urlPlaceholder: "https://...",
         pasteBtn: "Paste",
         analyzeBtn: "Analyze Video",
         clearBtn: "Clear",
@@ -429,7 +78,7 @@
         heroTitle1: "Descarga videos y audio con",
         heroTitle2: "máxima calidad instantánea",
         heroSubtitle: "Pega el enlace de cualquier video de YouTube, TikTok, Instagram, Pinterest o Facebook para descargar en MP4 o MP3.",
-        urlPlaceholder: "https://www.youtube.com/watch?v=...",
+        urlPlaceholder: "https://...",
         pasteBtn: "Pegar",
         analyzeBtn: "Analizar Video",
         clearBtn: "Limpiar",
@@ -533,13 +182,13 @@
       if (val.includes('tiktok.com')) return 'tiktok';
       if (val.includes('pinterest.com') || val.includes('pin.it')) return 'pinterest';
       if (val.includes('facebook.com') || val.includes('fb.watch')) return 'facebook';
-      return null;
+      return 'other';
     }
 
     urlInput.addEventListener('input', (e) => {
       const val = e.target.value.trim();
       const detected = detectPlatform(val);
-      if (detected) {
+      if (detected && detected !== 'other') {
         const info = platformConfigs[detected];
         detectedPlatformIcon.innerHTML = `<i class="${info.icon} ${info.color}"></i>`;
         detectionNotice.classList.remove('hidden');
@@ -577,7 +226,7 @@
       document.getElementById('resultCard').classList.add('hidden');
     }
 
-    // ========== LÓGICA REAL DA API ==========
+    // ========== LÓGICA REAL DA API COM ROTEAMENTO INTELIGENTE ==========
     const API_URL = "/api";
     let currentVideoData = null;
 
@@ -605,7 +254,11 @@
       btnText.textContent = '...';
 
       try {
-        const response = await fetch(API_URL + '/info', {
+        // ROTEAMENTO INTELIGENTE: YouTube usa endpoint próprio, resto usa o padrão
+        const platform = detectPlatform(url);
+        const infoEndpoint = platform === 'youtube' ? API_URL + '/youtube-info' : API_URL + '/info';
+
+        const response = await fetch(infoEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: url })
@@ -617,7 +270,8 @@
           throw new Error(data.detail);
         }
 
-        currentVideoData = data;
+        // Salva a plataforma nos dados para usar no download
+        currentVideoData = { ...data, platform: platform };
         
         // Preencher UI
         document.getElementById('resThumb').src = data.thumbnail || 'https://via.placeholder.com/400x225?text=No+Thumbnail';
@@ -628,8 +282,7 @@
         const secs = (data.duration || 0) % 60;
         document.getElementById('resDuration').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
 
-        const detected = detectPlatform(url) || 'youtube';
-        const info = platformConfigs[detected];
+        const info = platformConfigs[platform] || platformConfigs.youtube;
         const badge = document.getElementById('resPlatformBadge');
         badge.className = `absolute top-2 left-2 ${info.bg} text-white text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md`;
         badge.innerHTML = `<i class="${info.icon}"></i> ${info.name}`;
@@ -638,19 +291,28 @@
         const select = document.getElementById('formatSelect');
         select.innerHTML = '';
         
-        // Opção MP3 sempre no topo
-        const mp3Opt = document.createElement('option');
-        mp3Opt.value = 'mp3';
-        mp3Opt.textContent = '🎵 MP3 (Áudio de Alta Qualidade - 320kbps)';
-        select.appendChild(mp3Opt);
+        // Opção MP3 apenas onde há suporte real (YouTube e TikTok)
+        if (platform === 'youtube' || platform === 'tiktok') {
+          const mp3Opt = document.createElement('option');
+          mp3Opt.value = 'mp3';
+          mp3Opt.textContent = platform === 'youtube'
+            ? '🎵 MP3 (Áudio de Alta Qualidade - 320kbps)'
+            : '🎵 Som original do TikTok (MP3/M4A)';
+          select.appendChild(mp3Opt);
+        }
 
         // Opções de vídeo da API
-        data.formats.forEach(fmt => {
-          const opt = document.createElement('option');
-          opt.value = fmt.format_id;
-          opt.textContent = `🎬 ${fmt.resolution} - ${fmt.ext.toUpperCase()}`;
-          select.appendChild(opt);
-        });
+        if (data.formats && Array.isArray(data.formats)) {
+          data.formats.forEach(fmt => {
+            const opt = document.createElement('option');
+            opt.value = fmt.format_id;
+            // Fallback seguro: RapidAPI pode usar 'quality', yt-dlp usa 'resolution' ou 'format_note'
+            const res = fmt.resolution || fmt.quality || fmt.format_note || 'Qualidade Padrão';
+            const ext = fmt.ext || (fmt.type === 'audio' ? 'mp3' : 'mp4');
+            opt.textContent = `🎬 ${res} - ${ext.toUpperCase()}`;
+            select.appendChild(opt);
+          });
+        }
 
         // Mostrar card com animação
         const resCard = document.getElementById('resultCard');
@@ -669,15 +331,26 @@
       }
     }
 
-    // ========== DOWNLOAD REAL COM BARRA DE PROGRESSO ==========
+    // ========== DOWNLOAD REAL COM BARRA DE PROGRESSO E ROTEAMENTO ==========
     function triggerRealDownload() {
       if (!currentVideoData || !urlInput.value.trim()) return;
 
       const formatValue = document.getElementById('formatSelect').value;
       const isAudio = (formatValue === 'mp3');
-      const endpoint = isAudio ? API_URL + '/download-audio' : API_URL + '/download';
+      const platform = currentVideoData.platform || detectPlatform(urlInput.value.trim()) || 'other';
       
-      const payload = isAudio ? { url: urlInput.value.trim() } : { url: urlInput.value.trim(), format_id: formatValue };
+      let endpoint;
+      let payload;
+
+      // ROTEAMENTO INTELIGENTE DE DOWNLOAD
+      if (platform === 'youtube') {
+        endpoint = API_URL + '/youtube-download';
+        // Envia format_id (ou 'mp3'). O backend do YouTube deve saber lidar com isso via RapidAPI
+        payload = { url: urlInput.value.trim(), format_id: formatValue };
+      } else {
+        endpoint = isAudio ? API_URL + '/download-audio' : API_URL + '/download';
+        payload = isAudio ? { url: urlInput.value.trim() } : { url: urlInput.value.trim(), format_id: formatValue };
+      }
 
       const btn = document.getElementById('startDownloadBtn');
       const btnIcon = document.getElementById('dlBtnIcon');
@@ -696,7 +369,7 @@
       progressPercent.textContent = '0%';
       progressLabel.textContent = translations[currentLang].processingText;
 
-      // XMLHttpRequest para progresso real de download
+      // XMLHttpRequest para progresso real de download (MANTIDO)
       const xhr = new XMLHttpRequest();
       xhr.open('POST', endpoint, true);
       xhr.responseType = 'blob';
@@ -798,5 +471,3 @@
     document.getElementById('languageSelect').value = initialLang;
     setLanguage(initialLang);
   </script>
-</body>
-</html>

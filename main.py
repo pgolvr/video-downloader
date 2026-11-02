@@ -1,35 +1,34 @@
 import logging
+import os
 import re
-import subprocess
+import time
 import uuid
+import hashlib
 from pathlib import Path
 from urllib.parse import quote
 
-import yt_dlp
+import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 
 # ---------- Logging ----------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
-log = logging.getLogger("downloader")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+log = logging.getLogger("omnidrop")
 
 # ---------- Caminhos ----------
 BASE_DIR = Path(__file__).resolve().parent
 DOWNLOAD_DIR = BASE_DIR / "downloads"
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-import platform
-if platform.system() == "Windows":
-    FFMPEG_DIR = str(BASE_DIR)
-else:
-    FFMPEG_DIR = "/usr/bin"
+# ---------- RapidAPI (Auto / Download All in One - coder2077) ----------
+RAPIDAPI_KEY = os.environ.get("RAPIDAPI_KEY", "")
+RAPIDAPI_HOST = "instagram-downloader-download-instagram-videos-stories1.p.rapidapi.com"
+RAPIDAPI_BASE = f"https://{RAPIDAPI_HOST}"
+HTTP_TIMEOUT = 40  # a API espera até 30s na plataforma de origem
 
-app = FastAPI(title="API de Download de Vídeos", version="1.2.0")
+app = FastAPI(title="OmniDrop API", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,25 +36,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ---------- Verificação do FFmpeg na inicialização ----------
-@app.on_event("startup")
-def check_ffmpeg():
-    ffmpeg = BASE_DIR / "ffmpeg.exe"
-    ffprobe = BASE_DIR / "ffprobe.exe"
-    log.info("BASE_DIR      = %s", BASE_DIR)
-    log.info("DOWNLOAD_DIR  = %s", DOWNLOAD_DIR)
-    log.info("ffmpeg.exe    existe? %s", ffmpeg.exists())
-    log.info("ffprobe.exe   existe? %s", ffprobe.exists())
-    log.info("yt-dlp        = %s", yt_dlp.version.__version__)
-    if ffmpeg.exists():
-        try:
-            out = subprocess.run([str(ffmpeg), "-version"], capture_output=True, text=True, timeout=10)
-            log.info("ffmpeg -version: %s", out.stdout.splitlines()[0] if out.stdout else out.stderr)
-        except Exception as e:
-            log.error("Falha ao executar ffmpeg.exe: %s", e)
-    else:
-        log.error("ffmpeg.exe NÃO encontrado em %s", BASE_DIR)
 
 # ---------- Utilitários ----------
 def sanitize_filename(name: str) -> str:
@@ -65,33 +45,99 @@ def sanitize_filename(name: str) -> str:
 def safe_unlink(path: Path):
     try:
         path.unlink(missing_ok=True)
-        log.debug("Arquivo removido: %s", path)
     except Exception as e:
         log.warning("Não consegui remover %s: %s", path, e)
 
 def cleanup_job(job_prefix: str):
-    """Remove SÓ os arquivos deste download (inclui .part, .mp3, etc.)."""
     for f in DOWNLOAD_DIR.glob(f"{job_prefix}*"):
         safe_unlink(f)
 
-class YDLLogger:
-    def debug(self, msg): log.debug("yt-dlp: %s", msg)
-    def info(self, msg): log.info("yt-dlp: %s", msg)
-    def warning(self, msg): log.warning("yt-dlp: %s", msg)
-    def error(self, msg): log.error("yt-dlp: %s", msg)
+def api_headers():
+    if not RAPIDAPI_KEY:
+        raise HTTPException(status_code=500, detail="RAPIDAPI_KEY não configurada no servidor.")
+    return {"X-RapidAPI-Key": RAPIDAPI_KEY, "X-RapidAPI-Host": RAPIDAPI_HOST}
 
-# ---------- Opções para evitar bloqueios do YouTube (Estratégia Smart TV) ----------
-COMMON_YDL_OPTS = {
-    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "referer": "https://www.youtube.com/",
-    "extractor_args": {
-        "youtube": {
-            # O client 'tv' (YouTube TV) é o mais resistente a bloqueios de bot em servidores
-            "player_client": ["tv", "web"] 
-        }
-    },
-    "nocheckcertificate": True,
-}
+# ---------- Cache curto (evita pagar 2x pelo mesmo link) ----------
+_CACHE = {}
+CACHE_TTL = 240  # segundos
+
+def _cache_key(url: str) -> str:
+    return hashlib.sha1(url.encode("utf-8")).hexdigest()
+
+def cache_put(url: str, value: dict):
+    _CACHE[_cache_key(url)] = (time.time(), value)
+
+def cache_get(url: str):
+    item = _CACHE.get(_cache_key(url))
+    if item and (time.time() - item[0]) < CACHE_TTL:
+        return item[1]
+    return None
+
+# ---------- Chamadas à RapidAPI ----------
+def fetch_social(url: str) -> dict:
+    """GET /fetch -> Instagram, TikTok, Facebook, Pinterest, X."""
+    try:
+        r = requests.get(f"{RAPIDAPI_BASE}/fetch", headers=api_headers(),
+                         params={"url": url}, timeout=HTTP_TIMEOUT)
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"A API de download não respondeu: {e}")
+    if r.status_code == 422:
+        raise HTTPException(status_code=400, detail="Link inválido ou ausente.")
+    if r.status_code == 429:
+        raise HTTPException(status_code=429, detail="Limite de créditos ou requisições atingido. Tente mais tarde.")
+    try:
+        data = r.json()
+    except ValueError:
+        raise HTTPException(status_code=502, detail="Resposta inválida da API de download.")
+    if not data.get("ok", False):
+        raise HTTPException(status_code=400,
+                            detail=data.get("detail") or "Post privado, apagado ou plataforma não suportada.")
+    return data
+
+def download_to_file(download_url: str, job_id: str, ext: str) -> Path:
+    """Baixa o arquivo para o disco (garante Content-Length p/ progresso real)."""
+    path = DOWNLOAD_DIR / f"{job_id}.{ext}"
+    try:
+        with requests.get(download_url, stream=True, timeout=300) as r:
+            r.raise_for_status()
+            with open(path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=256 * 1024):
+                    if chunk:
+                        f.write(chunk)
+    except requests.RequestException as e:
+        safe_unlink(path)
+        raise HTTPException(status_code=502, detail=f"Falha ao baixar o arquivo: {e}")
+    if not path.exists() or path.stat().st_size == 0:
+        safe_unlink(path)
+        raise HTTPException(status_code=500, detail="O arquivo baixado veio vazio.")
+    return path
+
+def social_to_info(data: dict) -> dict:
+    """Normaliza o JSON do /fetch para o formato que o frontend já entende."""
+    typ = data.get("type")
+    formats = []
+    if typ == "album":
+        for i, item in enumerate(data.get("items", [])):
+            ext = "mp4" if item.get("type") == "video" else "jpg"
+            formats.append({
+                "format_id": str(i),
+                "resolution": f"{'Vídeo' if item.get('type') == 'video' else 'Foto'} {i + 1}",
+                "ext": ext,
+            })
+    else:
+        ext = "mp4" if typ == "video" else ("gif" if typ == "gif" else "jpg")
+        w, h = data.get("width"), data.get("height")
+        res = f"{w}x{h}" if w and h else "Qualidade original"
+        formats.append({"format_id": "0", "resolution": res, "ext": ext})
+
+    return {
+        "title": (data.get("caption") or "Post sem título")[:100],
+        "thumbnail": data.get("thumbnail_url") or "",
+        "duration": data.get("duration") or 0,
+        "uploader": data.get("source") or "Rede social",
+        "formats": formats,
+        "music_url": data.get("music_url"),
+    }
 
 # ---------- Rotas ----------
 @app.get("/")
@@ -99,116 +145,51 @@ def root():
     return FileResponse(BASE_DIR / "index.html")
 
 @app.post("/api/info")
-def get_video_info(data: dict):
-    url = data.get("url")
+def get_info(data: dict):
+    url = (data.get("url") or "").strip()
     if not url:
         raise HTTPException(status_code=400, detail="URL não fornecida")
-
-    log.info("INFO: %s", url)
-    try:
-        ydl_opts = {
-            "quiet": True, 
-            "no_warnings": True, 
-            "noplaylist": True,
-            **COMMON_YDL_OPTS
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-    except Exception as e:
-        log.exception("Erro em /api/info")
-        raise HTTPException(status_code=400, detail=str(e))
-
-    formats = []
-    for f in info.get("formats", []):
-        if f.get("vcodec") not in (None, "none") and f.get("ext") in ("mp4", "webm") and f.get("height"):
-            formats.append({
-                "format_id": str(f["format_id"]),
-                "height": f["height"],
-                "resolution": f.get("resolution") or f"{f.get('width')}x{f['height']}",
-                "ext": f["ext"],
-            })
-
-    by_height = {}
-    for f in formats:
-        by_height[f["height"]] = f
-    unique_formats = sorted(by_height.values(), key=lambda x: x["height"], reverse=True)
-
-    return {
-        "title": info.get("title", "Vídeo sem título"),
-        "thumbnail": info.get("thumbnail", ""),
-        "duration": info.get("duration", 0),
-        "uploader": info.get("uploader", "Desconhecido"),
-        "formats": unique_formats,
-    }
+    log.info("INFO social: %s", url)
+    raw = fetch_social(url)
+    cache_put(url, raw)
+    return social_to_info(raw)
 
 @app.post("/api/download")
-def download_video(data: dict):
-    url = data.get("url")
-    format_id = data.get("format_id")
+def download(data: dict):
+    url = (data.get("url") or "").strip()
+    format_id = str(data.get("format_id") or "0")
     if not url:
         raise HTTPException(status_code=400, detail="URL não fornecida")
 
-    job_id = uuid.uuid4().hex
-    outtmpl = str(DOWNLOAD_DIR / f"{job_id}.%(ext)s")
+    raw = cache_get(url) or fetch_social(url)
+    cache_put(url, raw)
+    typ = raw.get("type")
 
-    if format_id:
-        fmt = f"{format_id}+ba/{format_id}/bv*+ba/b"
+    if typ == "album":
+        idx = int(format_id) if format_id.isdigit() else 0
+        items = raw.get("items", [])
+        if not (0 <= idx < len(items)):
+            raise HTTPException(status_code=400, detail="Formato inválido para este álbum.")
+        item = items[idx]
+        dl_url = item.get("download_url")
+        ext = "mp4" if item.get("type") == "video" else "jpg"
     else:
-        fmt = "bv*+ba/b"
+        dl_url = raw.get("download_url")
+        ext = "mp4" if typ == "video" else ("gif" if typ == "gif" else "jpg")
 
-    log.info("DOWNLOAD job=%s url=%s format=%s", job_id, url, fmt)
+    if not dl_url:
+        raise HTTPException(status_code=400, detail="Este post não tem arquivo para download.")
 
-    ydl_opts = {
-        "format": fmt,
-        "outtmpl": outtmpl,
-        "ffmpeg_location": FFMPEG_DIR,
-        "merge_output_format": "mp4",
-        "noplaylist": True,
-        "logger": YDLLogger(),
-        "quiet": False,
-        "no_warnings": False,
-        **COMMON_YDL_OPTS
-    }
+    job_id = uuid.uuid4().hex
+    log.info("DOWNLOAD social job=%s type=%s ext=%s", job_id, typ, ext)
+    path = download_to_file(dl_url, job_id, ext)
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-    except Exception as e:
-        log.exception("Erro no yt-dlp durante o download")
-        cleanup_job(job_id)
-        raise HTTPException(status_code=500, detail=f"Falha no download: {e}")
-
-    final_path = None
-    for d in info.get("requested_downloads") or []:
-        p = d.get("filepath")
-        if p and Path(p).exists():
-            final_path = Path(p)
-            break
-
-    if final_path is None:
-        candidates = [
-            f for f in DOWNLOAD_DIR.glob(f"{job_id}.*")
-            if f.suffix.lower() in (".mp4", ".mkv", ".webm") and not re.search(r"\.f\d+\.", f.name)
-        ]
-        if candidates:
-            final_path = max(candidates, key=lambda f: f.stat().st_size)
-
-    log.info("Arquivos do job na pasta: %s", [f.name for f in DOWNLOAD_DIR.glob(f"{job_id}*")])
-
-    if final_path is None or not final_path.exists():
-        log.error("Arquivo final não encontrado para o job %s", job_id)
-        cleanup_job(job_id)
-        raise HTTPException(status_code=500, detail="O download terminou mas o arquivo final não foi gerado.")
-
-    size_mb = final_path.stat().st_size / 1024 / 1024
-    log.info("✅ Arquivo final gerado: %s (%.1f MB)", final_path.name, size_mb)
-
-    title = sanitize_filename(info.get("title", "video"))
-    download_name = f"{title}{final_path.suffix}"
-    media_type = "video/mp4" if final_path.suffix == ".mp4" else "application/octet-stream"
+    title = sanitize_filename(raw.get("caption") or "video")
+    download_name = f"{title}.{ext}"
+    media_type = {"mp4": "video/mp4", "jpg": "image/jpeg", "gif": "image/gif"}.get(ext, "application/octet-stream")
 
     return FileResponse(
-        path=final_path,
+        path=path,
         media_type=media_type,
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{quote(download_name)}",
@@ -219,63 +200,128 @@ def download_video(data: dict):
 
 @app.post("/api/download-audio")
 def download_audio(data: dict):
-    url = data.get("url")
+    url = (data.get("url") or "").strip()
     if not url:
         raise HTTPException(status_code=400, detail="URL não fornecida")
 
+    raw = cache_get(url) or fetch_social(url)
+    music = raw.get("music_url") or (raw.get("music") or {}).get("download_url")
+    if not music:
+        raise HTTPException(status_code=400,
+                            detail="Esta plataforma não oferece áudio separado. Use MP3 no YouTube ou no TikTok.")
+
+    ext = "mp3" if ".mp3" in music.split("?")[0].lower() else "m4a"
     job_id = uuid.uuid4().hex
-    outtmpl = str(DOWNLOAD_DIR / f"{job_id}.%(ext)s")
+    log.info("DOWNLOAD audio social job=%s", job_id)
+    path = download_to_file(music, job_id, ext)
 
-    log.info("DOWNLOAD AUDIO job=%s url=%s", job_id, url)
+    title = sanitize_filename(raw.get("caption") or "audio")
+    download_name = f"{title}.{ext}"
+    media_type = "audio/mpeg" if ext == "mp3" else "audio/mp4"
 
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "outtmpl": outtmpl,
-        "ffmpeg_location": FFMPEG_DIR,
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }],
-        "noplaylist": True,
-        "logger": YDLLogger(),
-        "quiet": False,
-        "no_warnings": False,
-        **COMMON_YDL_OPTS
-    }
+    return FileResponse(
+        path=path,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(download_name)}",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+        background=BackgroundTask(cleanup_job, job_id),
+    )
+
+# ---------- YouTube (mesma API) ----------
+FIXED_YT_FORMATS = ["2160p", "1440p", "1080p", "720p", "480p", "360p"]
+
+@app.post("/api/youtube-info")
+def youtube_info(data: dict):
+    url = (data.get("url") or "").strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="URL não fornecida")
+    log.info("INFO youtube: %s", url)
+
+    info = None
+    try:
+        r = requests.get(f"{RAPIDAPI_BASE}/youtube/info", headers=api_headers(),
+                         params={"url": url}, timeout=HTTP_TIMEOUT)
+        if r.status_code == 200:
+            j = r.json()
+            if j.get("ok", True) is not False:
+                info = j
+    except (requests.RequestException, ValueError):
+        info = None
+
+    if info:
+        title = info.get("title") or "Vídeo do YouTube"
+        uploader = info.get("author") or info.get("uploader") or info.get("channel") or "YouTube"
+        thumb = info.get("thumbnail_url") or info.get("thumbnail") or ""
+        if not thumb and isinstance(info.get("thumbnails"), list) and info["thumbnails"]:
+            thumb = info["thumbnails"][-1].get("url", "")
+        duration = info.get("duration") or 0
+
+        formats, seen = [], set()
+        for f in (info.get("formats") or info.get("videos") or []):
+            q = f.get("quality") or f.get("format") or f.get("label") or f.get("resolution")
+            if not q or q in seen or q in ("audio", "mp3", "m4a"):
+                continue
+            seen.add(q)
+            formats.append({"format_id": q, "resolution": q, "ext": "mp4"})
+        if not formats:
+            formats = [{"format_id": q, "resolution": q, "ext": "mp4"} for q in FIXED_YT_FORMATS]
+
+        return {"title": title, "thumbnail": thumb, "duration": duration,
+                "uploader": uploader, "formats": formats}
+
+    # Fallback gratuito: oEmbed do YouTube (título, autor, thumbnail)
+    title, uploader, thumb = "Vídeo do YouTube", "YouTube", ""
+    try:
+        oe = requests.get("https://www.youtube.com/oembed",
+                          params={"url": url, "format": "json"}, timeout=10).json()
+        title = oe.get("title") or title
+        uploader = oe.get("author_name") or uploader
+        thumb = oe.get("thumbnail_url") or thumb
+    except (requests.RequestException, ValueError):
+        pass
+
+    return {"title": title, "thumbnail": thumb, "duration": 0, "uploader": uploader,
+            "formats": [{"format_id": q, "resolution": q, "ext": "mp4"} for q in FIXED_YT_FORMATS]}
+
+@app.post("/api/youtube-download")
+def youtube_download(data: dict):
+    url = (data.get("url") or "").strip()
+    fmt = str(data.get("format_id") or data.get("format") or "1080p")
+    if not url:
+        raise HTTPException(status_code=400, detail="URL não fornecida")
+
+    log.info("DOWNLOAD youtube: %s formato=%s", url, fmt)
+    try:
+        r = requests.post(f"{RAPIDAPI_BASE}/youtube/download",
+                          headers={**api_headers(), "Content-Type": "application/json"},
+                          json={"url": url, "format": fmt}, timeout=HTTP_TIMEOUT)
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"A API de download não respondeu: {e}")
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-    except Exception as e:
-        log.exception("Erro no yt-dlp durante o download de áudio")
-        cleanup_job(job_id)
-        raise HTTPException(status_code=500, detail=f"Falha no download de áudio: {e}")
+        j = r.json()
+    except ValueError:
+        raise HTTPException(status_code=502, detail="Resposta inválida da API de download.")
+    if not j.get("ok", False):
+        raise HTTPException(status_code=400, detail=j.get("detail") or "Falha no download do YouTube.")
 
-    # Procurar explicitamente pelo arquivo .mp3 gerado com este job_id
-    mp3_candidates = list(DOWNLOAD_DIR.glob(f"{job_id}.mp3"))
-    if mp3_candidates:
-        final_path = mp3_candidates[0]
-    else:
-        # Fallback: procurar qualquer arquivo do job
-        candidates = list(DOWNLOAD_DIR.glob(f"{job_id}.*"))
-        if candidates:
-            final_path = max(candidates, key=lambda f: f.stat().st_size)
+    dl_url = j.get("download_url")
+    if not dl_url:
+        raise HTTPException(status_code=500, detail="A API não retornou a URL do arquivo.")
 
-    if final_path is None or not final_path.exists():
-        log.error("Arquivo final de áudio não encontrado para o job %s", job_id)
-        cleanup_job(job_id)
-        raise HTTPException(status_code=500, detail="O download de áudio terminou mas o arquivo final não foi gerado.")
+    ext = "mp3" if fmt == "mp3" else "mp4"
+    job_id = uuid.uuid4().hex
+    path = download_to_file(dl_url, job_id, ext)
 
-    size_mb = final_path.stat().st_size / 1024 / 1024
-    log.info("✅ Arquivo de áudio final gerado: %s (%.1f MB)", final_path.name, size_mb)
+    title = sanitize_filename(j.get("title") or "video")
+    download_name = f"{title}.{ext}"
+    media_type = "audio/mpeg" if ext == "mp3" else "video/mp4"
 
-    title = sanitize_filename(info.get("title", "audio"))
-    download_name = f"{title}.mp3"
-    
     return FileResponse(
-        path=final_path,
-        media_type="audio/mpeg",
+        path=path,
+        media_type=media_type,
         headers={
             "Content-Disposition": f"attachment; filename*=UTF-8''{quote(download_name)}",
             "Access-Control-Expose-Headers": "Content-Disposition",
